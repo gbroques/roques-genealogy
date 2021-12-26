@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roques Geneaology</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="loading-indicator.js"></script>
+    <script src="individual.js"></script>
+</head>
+<body>
+    <loading-indicator></loading-indicator>
+    <ul></ul>
+</body>
+    <script type="module">
+        import csvToArray from './csvToArray.js';
+
+        window.addEventListener('load', () => {
+            const loadingIndicator = document.querySelector('loading-indicator');
+            fetch('./individuals.csv')
+                .then(res => {
+                    if (res.ok) {
+                        return res.text();
+                    } else {
+                        throw new Error(res.status + ' ' + res.statusText);
+                    }
+                })
+                .then(individualsCsv => {
+                    loadingIndicator.style.display = 'none';
+                    return individualsCsv;
+                }).then(individualsCsv => {
+                    const individuals = csvToArray(individualsCsv);
+                    const list = document.querySelector('ul');
+                    individuals.forEach(individual => {
+                        const individualElement = window.document.createElement('roques-individual');
+                        individualElement.individual = individual;
+                        list.appendChild(individualElement);
+                    });
+                })
+                .catch(console.error);
+        });
+    </script>
+</html>
