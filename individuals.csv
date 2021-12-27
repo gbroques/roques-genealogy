@@ -1,7 +1,7 @@
-first_name,last_name,gender
-G,Roques,M
-Alec,Roques,M
-Kyle,Roques,M
-Courtney,Roques,F
-Randy,Roques,M
-Georgina,Roques,F
+individual_id,first_name,last_name,gender
+1,G,Roques,M
+2,Alec,Roques,M
+3,Kyle,Roques,M
+4,Courtney,Roques,F
+5,Randy,Roques,M
+6,Georgina,Roques,F

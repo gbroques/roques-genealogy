@@ -5,9 +5,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roques Geneaology</title>
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <script src="loading-indicator.js"></script>
-    <script src="individual.js"></script>
+    <script src="individual-node.js"></script>
 </head>
 <body>
     <loading-indicator></loading-indicator>
@@ -17,28 +18,74 @@
         import csvToArray from './csvToArray.js';
 
         window.addEventListener('load', () => {
-            const loadingIndicator = document.querySelector('loading-indicator');
-            fetch('./individuals.csv')
-                .then(res => {
-                    if (res.ok) {
-                        return res.text();
-                    } else {
-                        throw new Error(res.status + ' ' + res.statusText);
-                    }
-                })
-                .then(individualsCsv => {
-                    loadingIndicator.style.display = 'none';
-                    return individualsCsv;
-                }).then(individualsCsv => {
-                    const individuals = csvToArray(individualsCsv);
+            const promise = Promise.all([
+                fetchCsv('./individuals.csv'),
+                fetchCsv('./relationships.csv'),
+                fetchCsv('./relationship_types.csv')
+            ]);
+            promise
+                .then(hideLoadingIndicator)
+                .then(([individuals, relationships, relationshipTypes]) => {
+                    const findIndividual = id => individuals.find(({individual_id}) => individual_id === id);
                     const list = document.querySelector('ul');
-                    individuals.forEach(individual => {
-                        const individualElement = window.document.createElement('roques-individual');
-                        individualElement.individual = individual;
-                        list.appendChild(individualElement);
+                    const appendIndividual = makeAppendIndividual(list);
+
+                    const relationshipsByIndividual1Id = groupBy(relationships, 'individual_1_id');
+
+                    const seen = new Set();
+                    Object.entries(relationshipsByIndividual1Id).forEach(([individual1Id, relationships]) => {
+                        if (!seen.has(individual1Id)) {
+                            const individual1 = findIndividual(individual1Id);
+                            appendIndividual(individual1);
+                            seen.add(individual1Id);
+                            relationships.forEach(relationship => {
+                                const {individual_2_id} = relationship;
+                                if (!seen.has(individual_2_id)) {
+                                    const individual2 = findIndividual(individual_2_id);
+                                    appendIndividual(individual2);
+                                    seen.add(individual_2_id);
+                                }
+                            });
+                        }
                     });
                 })
                 .catch(console.error);
         });
+
+
+        function makeAppendIndividual(containerElement) {
+            return individual => {
+                const individualElement = window.document.createElement('individual-node');
+                individualElement.individual = individual;
+                containerElement.appendChild(individualElement);
+            };
+        }
+
+        function groupBy(array, key) {
+            return array.reduce((object, element) => {
+                (object[element[key]] = object[element[key]] || []).push(element);
+                return object;
+            }, {});
+        };
+
+        function fetchCsv(csv) {
+            return fetch(csv)
+                .then(responseToText)
+                .then(csvToArray);
+        }
+
+        function responseToText(response) {
+            if (response.ok) {
+                return response.text();
+            } else {
+                throw new Error(response.status + ' ' + response.statusText);
+            }
+        }
+
+        function hideLoadingIndicator(arg) {
+            const loadingIndicator = document.querySelector('loading-indicator');
+            loadingIndicator.style.display = 'none';
+            return arg;
+        }
     </script>
 </html>

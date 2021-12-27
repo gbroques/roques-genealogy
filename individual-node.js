@@ -1,4 +1,4 @@
-class Individual extends HTMLElement {
+class IndividualNode extends HTMLElement {
     constructor() {
         super();
         this.root = this.attachShadow({ mode: 'open' });
@@ -15,4 +15,4 @@ class Individual extends HTMLElement {
     }
 
 }
-window.customElements.define('roques-individual', Individual);
+window.customElements.define('individual-node', IndividualNode);
